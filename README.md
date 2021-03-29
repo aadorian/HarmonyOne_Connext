@@ -1,8 +1,7 @@
-Connext integrated to testnet and mainnets
+# Main changes:
 
-Main changes:
-
-1: modules/contracts/hardhat.config.ts
+**1** *add: *modules/contracts/hardhat.config.ts
+```javascript
  harmony: {
       accounts: { mnemonic },
       chainId: 1666600000,
@@ -12,10 +11,14 @@ Main changes:
       accounts: { mnemonic },
       chainId: 1666700000,
       url: urlOverride || "https://api.s0.b.hmny.io/",
-    },
+    }
+```
 
-2: create  modules/contracts/deployments/harmony with chainIdFile:1666600000 
-3: create modules/contracts/deployments/harmonytestnet with chainIdFile: 1666700000
+**2** *add:*  
+https://github.com/aadorian/HarmonyOne_Connext/tree/master/modules/contracts/deployments/harmony with chainIdFile:1666600000 
+
+**3** *add*: https://github.com/aadorian/HarmonyOne_Connext/tree/master/modules/contracts/deployments/harmonytestnet
+with chainIdFile: 1666700000
 
 Original Source README.md: 
 

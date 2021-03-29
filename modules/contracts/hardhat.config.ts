@@ -127,7 +127,7 @@ const config: HardhatUserConfig = {
       chainId: 1666600000,
       url: urlOverride || "https://api.harmony.one/",
     },
-    harmony_testNet: {
+    harmonytestnet: {
       accounts: { mnemonic },
       chainId: 1666700000,
       url: urlOverride || "https://api.s0.b.hmny.io/",

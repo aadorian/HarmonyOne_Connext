@@ -1,3 +1,24 @@
+Connext integrated to testnet and mainnets
+
+Main changes:
+
+1: modules/contracts/hardhat.config.ts
+ harmony: {
+      accounts: { mnemonic },
+      chainId: 1666600000,
+      url: urlOverride || "https://api.harmony.one/",
+    },
+    harmonytestnet: {
+      accounts: { mnemonic },
+      chainId: 1666700000,
+      url: urlOverride || "https://api.s0.b.hmny.io/",
+    },
+
+2: create  modules/contracts/deployments/harmony with chainIdFile:1666600000 
+3: create modules/contracts/deployments/harmonytestnet with chainIdFile: 1666700000
+
+Original Source README.md: 
+
 ![production](https://github.com/connext/vector/workflows/Production/badge.svg) [![](https://img.shields.io/discord/454734546869551114?&logo=discord)](https://discord.gg/m93Sqf4) [![](https://img.shields.io/twitter/follow/ConnextNetwork?style=social)](https://twitter.com/ConnextNetwork)
 
 # ↗️ Vector

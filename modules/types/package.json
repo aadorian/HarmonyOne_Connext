@@ -1,0 +1,31 @@
+{
+  "name": "@connext/vector-types",
+  "version": "0.2.1-beta.15",
+  "description": "TypeScript typings for common Connext types",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/src/index.d.ts",
+  "iife": "dist/index-iife.js",
+  "license": "MIT",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && tsc && rollup -c"
+  },
+  "dependencies": {
+    "@ethersproject/abstract-provider": "5.0.9",
+    "@ethersproject/abstract-signer": "5.0.13",
+    "@ethersproject/bignumber": "5.0.14",
+    "@ethersproject/providers": "5.0.23",
+    "@sinclair/typebox": "0.12.7",
+    "evt": "1.9.12"
+  },
+  "devDependencies": {
+    "ethers": "5.0.31",
+    "rollup": "2.40.0",
+    "rollup-plugin-typescript2": "0.30.0",
+    "typescript": "4.2.2"
+  }
+}

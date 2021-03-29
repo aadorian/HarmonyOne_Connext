@@ -1,0 +1,58 @@
+@ethNode = http://localhost:8545
+@sugarDaddy = 0x627306090abaB3A6e1400e9345bC60c78a8BEf57
+@alice = 0x119a11d0D1686C7330cA0650E26Fd6889Fbeb832
+@bob = 0x95B7e93A3aF19AcAE95aD120d4D8307bF1a6Be63
+@roger = 0x9CD130fE9aC1EF5173eEBE0C163C7a19f3E4ed2B
+@dave = 0x1b1968cAfFB691191CC05164d250a4bEF4aFaA65
+@carol = 0x65b70DfFdAEc7d8818F16f3caD4E86FaDD03993e
+
+@testToken = 0x9FBDa871d559710256a2502A2517b794B482Db40
+
+# 1 ETH
+@amount = 0xDE0B6B3A7640000 
+
+### SEND ETH
+POST {{ethNode}}
+Content-Type: application/json
+
+{
+  "jsonrpc":"2.0",
+  "method":"eth_sendTransaction",
+  "params":[{
+    "from": "{{sugarDaddy}}",
+    "to": "{{roger}}",
+    "value": "{{amount}}"
+  }],
+  "id":1
+}
+
+### GET BALANCE
+POST {{ethNode}}
+Content-Type: application/json
+
+{
+  "jsonrpc":"2.0",
+  "method":"eth_getBalance",
+  "params":["{{roger}}",  "latest"],
+  "id":1
+}
+
+### GET DECIMALS
+POST {{ethNode}}
+Content-Type: application/json
+
+{
+  "jsonrpc":"2.0",
+  "method":"eth_call",
+  "params":[{ "to": "{{testToken}}", "data": "0x313ce567" }],
+  "id":1
+}
+
+### GET BLOCK NUMBER
+POST {{ethNode}}
+Content-Type: application/json
+
+{
+  "method":"eth_blockNumber",
+  "params":[]
+}

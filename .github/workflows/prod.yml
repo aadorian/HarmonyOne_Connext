@@ -1,0 +1,201 @@
+name: Production
+
+on:
+  push:
+    branches:
+      - prod
+
+jobs:
+  build:
+    env:
+      DOCKER_USER: ${{ secrets.DOCKER_USER }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: make pull-latest
+      - run: make all
+      - run: bash ops/build-report.sh
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+      - run: make push
+
+  ssh:
+    env:
+      MESSAGING_DOMAINNAME: messaging.connext.network
+      TESTNET_DOMAINNAME: testnet-vector.connext.network
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v1
+      - name: test connection to messaging server
+        uses: ./ops/ssh-action/
+        with:
+          HOST: ubuntu@${{ env.MESSAGING_DOMAINNAME }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          CMD: 'echo "Successfully connected to $MESSAGING_DOMAINNAME: `hostname`";'
+      - name: test connection to testnet server
+        uses: ./ops/ssh-action/
+        with:
+          HOST: ubuntu@${{ env.TESTNET_DOMAINNAME }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          CMD: 'echo "Successfully connected to $TESTNET_DOMAINNAME: `hostname`";'
+
+  docs:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+      - run: pip install mkdocs-material
+      - run: cd modules/documentation && mkdocs gh-deploy --force && cd ../..
+
+  utils:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: make test-utils
+
+  contracts:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: make test-contracts
+
+  protocol:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: make test-protocol
+
+  engine:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: make test-engine
+
+  server-node:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: make test-server-node
+
+  browser-node:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: make test-browser-node
+
+  router:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: make test-router
+
+  messaging:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: make pull-latest
+      - run: make messaging
+      - run: make start-messaging
+      - run: make test-messaging
+      - name: Print logs
+        if: failure()
+        run: docker service logs --tail 200 messaging_auth
+
+  duet:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: make pull-latest
+      - run: make duet
+      - run: make start-duet
+      - run: make test-duet
+      - name: Print logs
+        if: failure()
+        run: |
+          docker service logs --tail 200 trio_alice
+          docker service logs --tail 200 trio_bob
+
+  trio:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: make pull-latest
+      - run: make trio
+      - run: make start-trio
+      - run: make test-trio
+      - name: Print logs
+        if: failure()
+        run: |
+          docker service logs --tail 200 trio_roger
+          docker service logs --tail 200 trio_router
+          docker service logs --tail 200 trio_carol
+          docker service logs --tail 200 trio_dave
+
+  messaging-prod:
+    runs-on: ubuntu-20.04
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v1
+      - run: make pull
+      - run: jq '.production = true' ops/config/messaging.default.json > messaging.config.json
+      - run: make restart-messaging
+      - run: bash ops/test-integration.sh messaging
+      - name: Print logs
+        if: failure()
+        run: docker service ls && docker service logs --tail 200 messaging_auth
+
+  routing-node-prod:
+    runs-on: ubuntu-20.04
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v1
+      - run: make pull
+      - run: jq '.production = true' ops/config/messaging.default.json > messaging.config.json
+      - run: jq '.production = true' ops/config/router.default.json > router.config.json
+      - run: make restart-router
+      - run: bash ops/test-integration.sh router
+      - name: Print logs
+        if: failure()
+        run: docker service ls && docker service logs --tail 200 router_node && docker service logs --tail 200 router_router
+
+  deploy-messaging:
+    env:
+      DOMAINNAME: messaging.connext.network
+    needs: [ssh, utils, contracts, protocol, engine, server-node, browser-node, router, messaging, duet, trio, messaging-prod, routing-node-prod]
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v1
+      - name: deploy messaging service to production
+        uses: ./ops/ssh-action/
+        with:
+          HOST: ubuntu@${{ env.DOMAINNAME }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          CMD: '
+            git checkout --force prod;
+            git reset --hard $GITHUB_SHA;
+            make restart-messaging;
+            docker container prune -f;
+            docker image ls -q | xargs docker image rm || true;
+          '
+  deploy-testnet:
+    env:
+      DOMAINNAME: testnet-vector.connext.network
+      MESSAGING_URL: https://messaging.connext.network
+    needs: [ssh, utils, contracts, protocol, engine, server-node, browser-node, router, messaging, duet, trio, messaging-prod, routing-node-prod]
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v1
+      - name: deploy testnet node to prod server
+        uses: ./ops/ssh-action/
+        with:
+          HOST: ubuntu@${{ env.DOMAINNAME }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          CMD: '
+            git checkout --force prod;
+            git reset --hard $GITHUB_SHA;
+            make restart;
+            docker container prune -f;
+            docker image ls -q | xargs docker image rm || true;
+          '

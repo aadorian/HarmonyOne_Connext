@@ -1,0 +1,49 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native"]
+  output        = "../src/generated/db-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("VECTOR_DATABASE_URL")
+}
+
+model QueuedUpdate {
+  id             String  @id @default(uuid())
+  type           String
+  channelAddress String
+  updateData     String
+  status         String
+  context        String?
+}
+
+model AutoRebalance {
+  id                      String  @id @default(uuid())
+  status                  String
+  approveHash             String?
+  executeHash             String?
+  completeHash            String?
+  
+  // Swap info
+  fromChainId             String
+  fromAssetId             String
+  toChainId               String
+  toAssetId               String
+  priceType               String
+  hardcodedRate           String
+  rebalancerUrl           String?
+  rebalanceThresholdPct   Int?
+  percentageFee           Int?
+  flatFee                 String?
+  gasSubsidyPercentage    Int?
+
+
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @default(now())
+
+  @@unique([fromChainId, toChainId, fromAssetId, toAssetId])
+  @@unique(approveHash)
+  @@unique(completeHash)
+  @@unique(executeHash)
+}

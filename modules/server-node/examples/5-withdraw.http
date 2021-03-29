@@ -1,0 +1,69 @@
+@aliceUrl = http://localhost:8003
+@bobUrl = http://localhost:8004
+@carolUrl = http://localhost:8005
+@daveUrl = http://localhost:8006
+@rogerUrl = http://localhost:8007
+@aliceBobChannel = 0x47809CD3218c69aB21BeEe8ad6a7b7Ec5E026859
+@carolRogerChannel = 0x66920C67620b492C3FF7f904af6DC3a8B58D7C9C
+@daveRogerChannel = 0x7E513218D56ef4465208d587e9eff56e9035cd02
+@adminToken = cxt1234
+@alicePublicIdentifier = vector8WxfqTu8EC2FLM6g4y6TgbSrx4EPP9jeDFQk3VBsBM7Jv8NakR
+@bobPublicIdentifier = vector5ArRsL26avPNyfvJd2qMAppsEVeJv11n31ex542T9gCd5B1cP3
+@carolPublicIdentifier = vector8ZaxNSdUM83kLXJSsmj5jrcq17CpZUwBirmboaNPtQMEXjVNrL
+@davePublicIdentifier = vector7mAydt3S3dDPWJMYSHZPdRo16Pru145qTNQYFoS8TrpXWW8HAj
+@rogerPublicIdentifier = vector8Uz1BdpA9hV5uTm6QUv5jj1PsUyCH8m8ciA94voCzsxVmrBRor
+@chainId = 1337
+@aliceAddress = 0x119a11d0D1686C7330cA0650E26Fd6889Fbeb832
+@bobAddress = 0x95B7e93A3aF19AcAE95aD120d4D8307bF1a6Be63
+
+# 0.01 ETH
+@ethAmount = 1000000000000000
+
+# 0.0001 ETH
+@feeAmount = 10000000000000
+
+@nodeUrl = {{carolUrl}}
+@nodePublicIdentifier = {{carolPublicIdentifier}}
+@counterpartyPublicIdentifier = {{rogerPublicIdentifier}}
+@channel = {{carolRogerChannel}}
+
+@transactionHash = 0xa4ceb691a423c39f3382a776b8f7a10683a29bbf13374abd7713551df64611b6
+@transferId = 0x8985689ae3260ba9a3b1dd811cb6bc9c14251a2daeee38c776893113f8458881
+
+##############
+### Get By transferId
+GET {{nodeUrl}}/{{nodePublicIdentifier}}/withdraw/transfer/0x19c7bb0bd54f1426013b31c2a0327a8d75d348da3839d9ef2714076f3b06b3da
+
+##############
+### Get By transactionHash
+GET {{nodeUrl}}/{{nodePublicIdentifier}}/withdraw/transaction/{{transactionHash}}
+
+##############
+### Alice Withdraw
+POST {{nodeUrl}}/withdraw
+Content-Type: application/json
+
+{
+  "publicIdentifier": "{{nodePublicIdentifier}}",
+  "channelAddress": "{{channel}}",
+  "amount": "{{ethAmount}}",
+  "assetId": "0x0000000000000000000000000000000000000000",
+  "recipient": "{{aliceAddress}}",
+  "fee": "0",
+  "meta": {
+    "hello": "world"
+  }
+}
+
+##############
+### Get Withdraw Fee Quote
+POST {{nodeUrl}}/withdraw/quote
+Content-Type: application/json
+
+{
+  "publicIdentifier": "{{nodePublicIdentifier}}",
+  "amount": "100000000000000000",
+  "assetId": "0xbd69fC70FA1c3AED524Bb4E82Adc5fcCFFcD79Fa",
+  "channelAddress": "{{channel}}",
+  "receiveExactAmount": false
+}
